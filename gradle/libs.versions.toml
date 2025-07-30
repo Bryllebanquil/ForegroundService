@@ -1,0 +1,33 @@
+[versions]
+agp = "8.2.2"
+appcompat = "1.6.1"
+material = "1.11.0"
+junit = "4.13.2"
+androidx-test-ext-junit = "1.1.5"
+espresso-core = "3.5.1"
+constraintlayout = "2.1.4"
+core-ktx = "1.12.0"
+multidex = "2.0.1"
+firebase-bom = "32.7.0"
+play-services-location = "21.0.1"
+media = "1.7.0"
+desugar = "2.0.4"
+
+[libraries]
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "play-services-location" }
+media = { group = "androidx.media", name = "media", version.ref = "media" }
+desugar = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.1" }
+

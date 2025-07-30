@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Controller</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .button.red {
+            background-color: #f44336;
+        }
+
+        .button.red:hover {
+            background-color: #da190b;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+
+        #microphoneStatus {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Phone Controller</h1>
+            <p>Control your phone remotely</p>
+
+            <div class="card">
+                <h2>Microphone Control</h2>
+                <button id="startMic" class="button">Start Recording</button>
+                <button id="stopMic" class="button red" style="display: none;">Stop Recording</button>
+                <div id="microphoneStatus"></div>
+            </div>
+
+            <div class="card">
+                <h2>Location Status</h2>
+                <div id="locationStatus" class="status">
+                    Waiting for location updates...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        const startMicBtn = document.getElementById('startMic');
+        const stopMicBtn = document.getElementById('stopMic');
+        const micStatus = document.getElementById('microphoneStatus');
+        const locationStatus = document.getElementById('locationStatus');
+
+        // Function to send commands to the Android app
+        function sendCommand(command, data = {}) {
+            // Using the Android interface that we'll create
+            if (window.Android) {
+                window.Android.handleCommand(JSON.stringify({
+                    command: command,
+                    data: data
+                }));
+            } else {
+                console.log('Android interface not available');
+            }
+        }
+
+        startMicBtn.addEventListener('click', () => {
+            sendCommand('START_MIC');
+            startMicBtn.style.display = 'none';
+            stopMicBtn.style.display = 'inline-block';
+            micStatus.style.display = 'block';
+            micStatus.textContent = 'Recording in progress...';
+            isRecording = true;
+        });
+
+        stopMicBtn.addEventListener('click', () => {
+            sendCommand('STOP_MIC');
+            stopMicBtn.style.display = 'none';
+            startMicBtn.style.display = 'inline-block';
+            micStatus.textContent = 'Recording stopped';
+            isRecording = false;
+        });
+
+        // Function to be called from Android to update location
+        window.updateLocation = function (lat, lng, accuracy) {
+            locationStatus.textContent = `Current Location: ${lat}, ${lng} (Accuracy: ${accuracy}m)`;
+            locationStatus.className = 'status success';
+        };
+
+        // Function to be called from Android to show errors
+        window.showError = function (message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'status error';
+            errorDiv.textContent = message;
+            document.querySelector('.container').appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        };
+    </script>
+</body>
+
+</html>

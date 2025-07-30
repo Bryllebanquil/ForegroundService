@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "779126435868",
+    "project_id": "phone-tracker-ebd88",
+    "storage_bucket": "phone-tracker-ebd88.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779126435868:android:5f0ff365cbdb86cecdefd9",
+        "android_client_info": {
+          "package_name": "com.example.foregroundservice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-iFTAOzxxN0W2FWXxDiBolLozaEiFnVo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
