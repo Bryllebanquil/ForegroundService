@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">foreground service</string>
+    <string name="accessibility_service_description">This service provides enhanced accessibility features for device control and automation.</string>
 </resources>

