@@ -48,7 +48,7 @@ android {
         jvmTarget = "1.8"
     }
 
-    packaging {
+    packagingOptions {
         resources {
             excludes += listOf(
                 "META-INF/NOTICE.md",
