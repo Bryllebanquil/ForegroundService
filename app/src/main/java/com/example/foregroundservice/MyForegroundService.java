@@ -50,7 +50,6 @@ import android.hardware.camera2.CameraCaptureSession.CaptureCallback;
 import android.view.Surface;
 import android.graphics.SurfaceTexture;
 import android.util.Size;
-import android.util.Log;
 import android.os.Environment;
 import android.net.Uri;
 import com.google.firebase.storage.FirebaseStorage;

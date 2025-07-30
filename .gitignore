@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firebase credentials
+firebase-credentials.json
+web-controller/.env
+
+# Generated files
+*.mp3
+*.jpg
+*.png
+*.wav
+*.aac
+
+# Logs
+*.log

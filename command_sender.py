@@ -7,10 +7,20 @@ import base64 # Added missing import for base64
 import binascii # For handling base64 decoding errors
 
 # Initialize Firebase Admin
-cred = credentials.Certificate('firebase-credentials.json')  # Download this from Firebase Console
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://phone-tracker-ebd88-default-rtdb.firebaseio.com'
-})
+try:
+    cred = credentials.Certificate('firebase-credentials.json')  # Download this from Firebase Console
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://phone-tracker-ebd88-default-rtdb.firebaseio.com'
+    })
+    print("Firebase initialized successfully")
+except FileNotFoundError:
+    print("Error: firebase-credentials.json not found!")
+    print("Please copy firebase-credentials.json.example to firebase-credentials.json")
+    print("and fill in your Firebase service account credentials.")
+    exit(1)
+except Exception as e:
+    print(f"Error initializing Firebase: {e}")
+    exit(1)
 
 def send_command(user_id, action, params=None):
     """Send a command to a specific device."""
