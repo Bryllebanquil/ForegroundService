@@ -227,11 +227,14 @@ public class CommandHandler {
         executorService.execute(() -> {
             try {
                 String cameraType = args != null ? args.optString("camera", "back") : "back";
+                if (cameraType == null || cameraType.isEmpty()) {
+                    cameraType = "back";
+                }
                 // Implementation will be handled by the main service
                 sendResponse("take_picture", "success", "Picture capture initiated");
             } catch (Exception e) {
                 Log.e(TAG, "Error taking picture", e);
-                sendResponse("take_picture", "error", e.getMessage());
+                sendResponse("take_picture", "error", e.getMessage() != null ? e.getMessage() : "Unknown error");
             }
         });
     }
