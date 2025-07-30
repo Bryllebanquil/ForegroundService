@@ -50,7 +50,8 @@ def send_command(user_id, action, params=None):
                         # Clean up response
                         response_ref.child(response_id).delete()
                         return response
-                except:
+                except (json.JSONDecodeError, KeyError) as e:
+                    print(f"Error parsing response: {e}")
                     continue
         time.sleep(0.5)
     
@@ -84,8 +85,8 @@ def main():
             
         try:
             choice = int(choice)
-        except:
-            print("Invalid choice")
+        except ValueError:
+            print("Invalid choice - please enter a number")
             continue
             
         if choice == 1:

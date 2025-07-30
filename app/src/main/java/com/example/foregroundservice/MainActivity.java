@@ -152,7 +152,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Request all regular permissions at once
-        ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
+        java.util.List<String> permissionsToRequest = new java.util.ArrayList<>();
+        for (String permission : REQUIRED_PERMISSIONS) {
+            permissionsToRequest.add(permission);
+        }
+        
+        // Add API level specific permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            for (String permission : BLUETOOTH_PERMISSIONS) {
+                permissionsToRequest.add(permission);
+            }
+        }
+        
+        ActivityCompat.requestPermissions(this, permissionsToRequest.toArray(new String[0]), PERMISSION_REQUEST_CODE);
     }
 
     private boolean hasAppOpsPermissions() {
@@ -294,6 +306,15 @@ public class MainActivity extends AppCompatActivity {
         for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
+            }
+        }
+        
+        // Check API level specific permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            for (String permission : BLUETOOTH_PERMISSIONS) {
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
             }
         }
 
