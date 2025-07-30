@@ -43,12 +43,12 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
     
-    // Kotlin configuration without explicit toolchain
     kotlinOptions {
         jvmTarget = "1.8"
+        freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
     }
 
-    packagingOptions {
+    packaging {
         resources {
             excludes += listOf(
                 "META-INF/NOTICE.md",
