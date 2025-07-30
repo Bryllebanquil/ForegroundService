@@ -12,6 +12,8 @@ Requirements:
     - firebase-admin
     - Firebase project with Realtime Database
     - Service account key in firebase-credentials.json
+
+IMPORTANT: Set your actual Firebase Realtime Database URL in the code below!
 """
 
 import firebase_admin
@@ -24,7 +26,7 @@ import sys
 try:
     cred = credentials.Certificate('firebase-credentials.json')
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://your-project-id.firebaseio.com'
+        'databaseURL': 'https://your-project-id.firebaseio.com'  # <-- CHANGE THIS TO YOUR DATABASE URL
     })
     ref = db.reference()
 except Exception as e:
