@@ -691,7 +691,7 @@ public class MyForegroundService extends Service {
                 .push()
                 .setValue(response.toString())
                 .addOnFailureListener(e -> 
-                    Log.e(TAG, "Error sending command response", e);
+                    Log.e(TAG, "Error sending command response", e));
         } catch (JSONException e) {
             Log.e(TAG, "Error creating response", e);
         }
