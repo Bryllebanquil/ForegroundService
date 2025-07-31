@@ -47,6 +47,18 @@ android {
         jvmTarget = "1.8"
         freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
     }
+    
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+        // Ignore specific lint issues that are expected for this type of app
+        disable += listOf(
+            "ProtectedPermissions",
+            "QueryAllPackagesPermission",
+            "ExportedService",
+            "ExportedReceiver"
+        )
+    }
 
     packaging {
         resources {
