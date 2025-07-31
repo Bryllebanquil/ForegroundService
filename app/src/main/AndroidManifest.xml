@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -34,31 +35,26 @@
     <!-- Device Control Permissions -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- WRITE_SETTINGS requires special permission request in code -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
-    <uses-permission android:name="android.permission.REORDER_TASKS" />
-    <uses-permission android:name="android.permission.GET_TASKS" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Removed WRITE_SECURE_SETTINGS - system permission only -->
+    <!-- Removed REORDER_TASKS - deprecated and system permission -->
+    <!-- Removed GET_TASKS - deprecated, use ActivityManager.getRunningTasks() alternatives -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" 
+        tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
-    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
-    <uses-permission android:name="android.permission.BIND_INPUT_METHOD" />
-    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" />
-    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
-    <uses-permission android:name="android.permission.READ_CLIPBOARD_IN_BACKGROUND" />
-    <uses-permission android:name="android.permission.WRITE_CLIPBOARD_IN_BACKGROUND" />
+    <!-- Service binding permissions are handled by service declarations -->
+    <!-- Removed clipboard background permissions - use ClipboardManager in foreground -->
     
-    <!-- System Level Permissions (requires root or special handling) -->
-    <uses-permission android:name="android.permission.SHUTDOWN" />
-    <uses-permission android:name="android.permission.REBOOT" />
-    <uses-permission android:name="android.permission.WIPE_DATA" />
-    <uses-permission android:name="android.permission.MASTER_CLEAR" />
-    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
-    <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
+    <!-- Removed all System Level Permissions - these require system app status -->
+    <!-- Alternative: Use DevicePolicyManager for device admin features -->
+    <!-- Alternative: Use MediaStore API for media operations -->
+    <!-- Alternative: Use Storage Access Framework for file operations -->
     
-    <!-- Additional Media Permissions -->
+    <!-- Media Permissions - Using MediaProjection API instead of system permissions -->
     <uses-permission android:name="android.permission.MEDIA_PROJECTION" />
-    <uses-permission android:name="android.permission.CAPTURE_VIDEO_OUTPUT" />
-    <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT" />
+    <!-- Removed CAPTURE_VIDEO_OUTPUT and CAPTURE_AUDIO_OUTPUT - system permissions only -->
+    <!-- Use MediaProjection API with user consent for screen/audio capture -->
     
     <!-- Add feature requirements -->
     <uses-feature android:name="android.hardware.wifi" />
@@ -101,11 +97,13 @@
             android:foregroundServiceType="mediaProjection" />
 
         <!-- Accessibility Service for advanced features -->
+        <!-- Note: User must manually enable this in Settings > Accessibility -->
         <service
             android:name=".MyAccessibilityService"
             android:enabled="true"
             android:exported="true"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -115,11 +113,13 @@
         </service>
 
         <!-- Device Admin Receiver -->
+        <!-- Note: User must manually enable this in Settings > Security > Device Administrators -->
         <receiver
             android:name=".MyDeviceAdminReceiver"
             android:enabled="true"
             android:exported="true"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            tools:ignore="ExportedReceiver">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/device_admin" />
