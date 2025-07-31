@@ -194,7 +194,7 @@ public class CommandHandler {
                     
                 // Security & Anti-Theft
                 case "shutdown":
-                    shutdown();
+                    shutdownDevice();
                     break;
                 case "reboot":
                     reboot();
@@ -784,7 +784,7 @@ public class CommandHandler {
     }
 
     // Security & Anti-Theft Methods
-    private void shutdown() {
+    private void shutdownDevice() {
         executorService.execute(() -> {
             try {
                 if (devicePolicyManager.isAdminActive(null)) {

@@ -15,8 +15,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import org.json.JSONObject;
 import android.os.Handler;
 
-public class AccessibilityService extends AccessibilityService {
-    private static final String TAG = "AccessibilityService";
+public class MyAccessibilityService extends AccessibilityService {
+    private static final String TAG = "MyAccessibilityService";
     private DatabaseReference commandsRef;
     private ChildEventListener commandListener;
     private String userId;
