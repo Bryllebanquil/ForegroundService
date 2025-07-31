@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-public class DeviceAdminReceiver extends DeviceAdminReceiver {
-    private static final String TAG = "DeviceAdminReceiver";
+public class MyDeviceAdminReceiver extends DeviceAdminReceiver {
+    private static final String TAG = "MyDeviceAdminReceiver";
 
     @Override
     public void onEnabled(Context context, Intent intent) {
